@@ -1,194 +1,612 @@
+<!-----------------------------------------------------------------------------------------------------------------
+<  DOWNLOAD INSTRUCTIONS:                                                                                         >
+< 1. Click [ctrl + s] or right-click on the page and select "Save As" to download the file.                       >
+< 2. Save the file with the name "dmt346.html" on your computer.                                                   >
+< 3. Open the file in a web browser to view the interface.                                                        >
+< 4. The interface will check for updates automatically and display a notification if a new version is available. >
+------------------------------------------------------------------------------------------------------------------>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sensor Readings</title>
-    <style>
-        /* Global Styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #ecfff7;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sensor Readings</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #ecfff7;
+      color: #333;
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 20px;
+      justify-items: center;
+    }
 
-        /* Container Styles */
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            margin-bottom: 20px;
-        }
+    /* Grid Layout */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 4fr 4fr;
+      grid-template-rows: 1fr auto;
+      gap: 20px;
+      width: 85%;
+    }
 
-        /* Heading Styles */
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #333;
-        }
+    /* Container Styles */
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
 
-        /* Reading Display Styles */
-        .reading {
-            font-size: 18px;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        /* Last reading with no border */
-        .reading:last-child {
-            border-bottom: none;
-        }
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 300px;
+    }
 
-        /* Historical Data Table Styles */
-        table {
-            width: 100%;
-            max-width: 600px;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 16px;
-        }
-        
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
+    /* Reading Styles */
+    .reading {
+      font-size: 18px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
 
-        th {
-            background-color: #f4f4f4;
-            color: #555;
-            font-weight: bold;
-        }
-    </style>
+    .reading:last-child {
+      border-bottom: none;
+    }
+
+    /* Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f4f4f4;
+      color: #555;
+      font-weight: bold;
+    }
+
+    /* Button Styles */
+    button {
+      width: 100%;
+      font-size: 16px;
+      background-color: #ecfff7;
+      border-radius: 5px;
+      border: none;
+      font-size: 18px;
+      padding: 8px;
+      margin-top: 8px;
+      transition-duration: 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      filter: brightness(0.9);
+    }
+
+    #sheetNameInput {
+      margin-top: 8px;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .update-tab {
+      background-color: #ffeb3b;
+      border-bottom: 4px solid #c0b12f;
+      color: #333;
+      padding: 10px;
+      width: 100%;
+      text-align: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      display: none;
+    }
+    .update-tab a {
+      color: #333;
+      text-decoration: none;
+      background-color: #c0b12f;
+      padding: 5px 10px;
+      border-radius: 5px;
+      margin-left: 10px;
+    }
+    .update-tab .close {
+      position: absolute;
+      right: 25px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #c0b12f;
+      padding: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <!-- Container for Current Readings -->
+  <!-- Update Tab -->
+  <div class="update-tab" id="updateTab">
+    A new version is available. Please download the latest file from:
+    <a href="https://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/dmt346.html" target="_blank" rel="noopener">Update Page</a>
+    <span class="close" onclick="document.getElementById('updateTab').style.display='none'">x</span>
+  </div>
+  <!-- Grid Layout for Current Readings and Chart -->
+  <div class="grid-container">
     <div class="container">
-        <h1>Current Sensor Reading</h1>
-        <div class="reading" id="dewpointTemperature">Dewpoint Temperature: Loading...</div>
-        <div class="reading" id="mixingRatio">Mixing Ratio: Loading...</div>
-        <div class="reading" id="sensorSaturationRate">Sensor Saturation Rate: Loading...</div>
-        <div class="reading" id="sensorTemperature">Sensor Temperature: Loading...</div>
+      <div class="input-container">
+        <input type="text" id="sheetNameInput" placeholder="Dataset Name">
+        <button type="button" id="submitSheetName">Update</button>
+      </div>
+      <button type="button">Export Data</button>
+      <button type="button">Import Data</button>
+      <!--A cookie called "backup" should be automatically created and if the last timestamp is within 60 minutes when the page first loads, it should populate with that data. Otherwise, the backup file should be cleared when the first bit of new data comes in.-->
+      <button type="button">Save Cookie 🍪</button>
+      <button type="button">Load Cookie 🍪</button>
+      <button type="button">Delete Cookie 🍪</button>
+      <button type="button" style="background-color: rgb(255, 240, 240); color: rgb(173, 61, 61);">Clear History ⚠️</button>
+      <button type="button" id="fetchIpAddress"><s>Fetch IP Address</s></button>
+    </div>
+    <div class="container">
+      <h1>Current Sensor Reading</h1>
+      <div class="reading" id="dewpointTemperature">Dewpoint Temperature: Loading...</div>
+      <div class="reading" id="mixingRatio">Mixing Ratio: Loading...</div>
+      <div class="reading" id="sensorSaturationRate">Sensor Saturation Rate: Loading...</div>
+      <div class="reading" id="sensorTemperature">Sensor Temperature: Loading...</div>
+    </div>
+    <div class="container">
+      <h1>Sensor Data Trend</h1>
+      <div class="chart-container">
+        <canvas id="sensorChart"></canvas>
+      </div>
     </div>
 
     <!-- Historical Data Table -->
-    <div class="container">
-        <h1>Historical Data</h1>
-        <table id="historicalDataTable">
-            <thead>
-                <tr>
-                    <th>UTC Time</th>
-                    <th>Dewpoint Temp (°F)</th>
-                    <th>Mixing Ratio (g/kg)</th>
-                    <th>Saturation Rate (%)</th>
-                    <th>Sensor Temp (°F)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Rows populated dynamically -->
-            </tbody>
-        </table>
+    <div class="container" style="grid-column: span 3;">
+      <h1>Historical Data</h1>
+      <table id="historicalDataTable">
+      <thead>
+        <tr>
+        <th>UTC Time</th>
+        <th>Dewpoint Temp (°F)</th>
+        <th>Mixing Ratio (g/kg)</th>
+        <th>Saturation Rate (%)</th>
+        <th>Sensor Temp (°F)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows populated dynamically -->
+      </tbody>
+      </table>
     </div>
+  </div>
+  <script>
+    
+    // ============================================================================================
+    // VERSION CHECK ==============================================================================
+    // ============================================================================================
 
-    <script>
-        const currentVersion = 2.0; // Current version of the file
+    const currentVersion = 2.0; // Current version of the file
 
-        async function checkVersion() {
-            try {
-                const response = await fetch('https://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/dmt346.html');
-                const text = await response.text();
-                const versionMatch = text.match(/const currentVersion = (\d+\.\d+);/);
-                if (versionMatch) {
-                    const latestVersion = parseFloat(versionMatch[1]);
-                    if (currentVersion < latestVersion) {
-                        alert(`A new version (${latestVersion}) is available. Please download the latest file from:\nhttps://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/index.html`);
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking version:', error);
+    async function checkVersion() {
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/index.html');
+        const text = await response.text();
+        const versionMatch = text.match(/const currentVersion = (\d+\.\d+);/);
+        if (versionMatch) {
+          const latestVersion = parseFloat(versionMatch[1]);
+          if (currentVersion < latestVersion) {
+            document.getElementById('updateTab').style.display = 'block';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking version:', error);
+      }
+    }
+
+    checkVersion();
+
+    // ============================================================================================
+    // CHART SETUP ================================================================================
+    // ============================================================================================
+
+    const sensorChartCtx = document.getElementById('sensorChart').getContext('2d');
+    const sensorChart = new Chart(sensorChartCtx, {
+      type: 'line',
+      data: {
+        labels: [], // Time labels
+        datasets: [
+          {
+            label: 'Dewpoint Temp (°F)',
+            borderColor: '#4caf50',
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Mixing Ratio (g/kg)',
+            borderColor: '#2196f3',
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Saturation Rate (%)',
+            borderColor: '#ff9800',
+            data: [],
+            fill: false,
+          },
+          {
+            label: 'Sensor Temp (°F)',
+            borderColor: '#f44336',
+            data: [],
+            fill: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Time'
             }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Value'
+            }
+          }
+        }
+      }
+    });
+
+    // ============================================================================================
+    // DATA COLLECTION & LOGGING ==================================================================
+    // ============================================================================================
+
+    async function sendDataToGoogleSheet(data) {
+      try {
+        // Add the sheetName to the data object
+        const sheetNameInput = document.getElementById('sheetNameInput');
+        data.sheetName = sheetNameInput ? sheetNameInput.value || 'Sheet1' : 'Sheet1';
+
+        const response = await fetch('https://script.google.com/macros/s/AKfycbzA1au7YC3Rtzo9NTutuODMyo0UI5w_zJAbjlKPgutlR6kti0vyoryXrSHctIO7uH3o/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        // Check if the response is okay
+        if (!response.ok) {
+          throw new Error('No "OK" response from Google Sheet');
         }
 
-        async function fetchSensorData() {
-            try {
-                const response = await fetch('http://35.20.38.24/');
-                const data = await response.json();
+        const result = await response.json();
+        if (result.status === 'success') {
+          console.log('Data sent to Google Sheet successfully');
+        }
+      } catch (error) {
+        console.warn('Google Sheet:\n', error);
+      }
+    }
+    
+    async function fetchSensorData() {
+      try {
+        const ipAddress = localStorage.getItem('sensor-ip') || '35.20.54.7';
+        const response = await fetch(`http://${ipAddress}/`);
+        const data = await response.json();
+
+        // Update Current Readings
+        document.getElementById('dewpointTemperature').innerText = `Dewpoint Temperature: ${data.dewpointTemperature}`;
+        document.getElementById('mixingRatio').innerText = `Mixing Ratio: ${data.mixingRatio}`;
+        document.getElementById('sensorSaturationRate').innerText = `Sensor Saturation Rate: ${data.sensorSaturationRate}`;
+        document.getElementById('sensorTemperature').innerText = `Sensor Temperature: ${data.sensorTemperature}`;
+
+        // Update Chart
+        const timestamp = new Date().toLocaleTimeString();
+        sensorChart.data.labels.push(timestamp);
+        sensorChart.data.datasets[0].data.push(data.dewpointTemperature);
+        sensorChart.data.datasets[1].data.push(data.mixingRatio);
+        sensorChart.data.datasets[2].data.push(data.sensorSaturationRate);
+        sensorChart.data.datasets[3].data.push(data.sensorTemperature);
+
+        if (sensorChart.data.labels.length > 20) {
+          sensorChart.data.labels.shift();
+          sensorChart.data.datasets.forEach(dataset => dataset.data.shift());
+        }
+
+        sensorChart.update();
+
+        // Update Historical Data Table
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${timestamp}</td>
+          <td>${data.dewpointTemperature}</td>
+          <td>${data.mixingRatio}</td>
+          <td>${data.sensorSaturationRate}</td>
+          <td>${data.sensorTemperature}</td>
+        `;
+        document.getElementById('historicalDataTable').querySelector('tbody').appendChild(row);
+
+        await sendDataToGoogleSheet({
+          timestamp,
+          dewpointTemperature: data.dewpointTemperature,
+          mixingRatio: data.mixingRatio,
+          sensorSaturationRate: data.sensorSaturationRate,
+          sensorTemperature: data.sensorTemperature
+        });
+
+      } catch (error) {
+        console.error('Error fetching sensor data:', error);
+      }
+    }
+
+    async function getIpAddress() {
+      const ipAddress = prompt('Enter the IP address of the sensor:');
+      if (!ipAddress) {
+        localStorage.removeItem('sensor-ip');
+        return alert('Sensor IP Address cleared.');
+      }
+      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (!ipRegex.test(ipAddress)) {
+        return alert('Invalid IP address format. Please enter a valid IP address.');
+      } else {
+        localStorage.setItem('sensor-ip', ipAddress);
+        alert(`Sensor IP Address set to: ${ipAddress}`);
+      }
+      /*
+      try {
+        let ipAddress = localStorage.getItem('sensor-ip') || '35.20.54.7';
+        let newIpAddress = null;
+        // Simulate user gesture by requesting port on button click
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        const reader = port.readable.getReader();
+        const textDecoder = new TextDecoderStream();
+
+        // Ensure the stream is not already locked
+        if (!port.readable.locked) {
+          const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+          const readerStream = textDecoder.readable.getReader();
+
+          const timeout = new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds timeout
+          const readLoop = async () => {
+            while (true) {
+              const { value, done } = await readerStream.read();
+              if (done) {
+                readerStream.releaseLock();
+                break;
+              }
+              // Assuming the ESP32 sends the IP address directly
+              if (value.trim()) {
+                newIpAddress = value.trim();
+                localStorage.setItem('sensor-ip', newIpAddress);
+                break;
+              }
+            }
+          };
+
+          await Promise.race([readLoop(), timeout]);
+
+          await readerStream.cancel();
+          await readableStreamClosed.catch(() => {});
+
+        }
+
+        if (reader.locked) {
+          reader.releaseLock();
+        }
+
+        await port.close();
+
+        if (newIpAddress) {
+          alert(`New IP Address fetched: ${newIpAddress}`);
+          return newIpAddress;
+        } else {
+          alert(`Using old IP Address: ${ipAddress}`);
+          return ipAddress;
+        }
+      } catch (error) {
+        console.error('Error reading IP address from USB:', error);
+        return localStorage.getItem('sensor-ip') || '35.20.54.7';
+      }
+      */
+    }
+
+    // Fetch data every 5 seconds
+    setInterval(fetchSensorData, 5000);
+    fetchSensorData(); // Initial fetch
+
+    // ============================================================================================
+    // MENU BUTTONS ===============================================================================
+    // ============================================================================================
+    
+    // Export Data functionality
+    function exportData() {
+        const sheetName = document.querySelector('textarea').value || 'Sheet1';
+        const table = document.getElementById('historicalDataTable');
+        const rows = table.querySelectorAll('tr');
+        
+        // Convert table to CSV
+        const csvContent = Array.from(rows).map(row => 
+            Array.from(row.querySelectorAll('td,th'))
+                .map(cell => cell.textContent)
+                .join(',')
+        ).join('\n');
+
+        // Create a Blob and download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${sheetName}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Import Data functionality
+    function importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const csv = e.target.result;
+                const rows = csv.split('\n');
+                const tbody = document.getElementById('historicalDataTable').querySelector('tbody');
                 
-                // Update current readings
-                document.getElementById('dewpointTemperature').innerText = `Dewpoint Temperature: ${data.dewpointTemperature}`;
-                document.getElementById('mixingRatio').innerText = `Mixing Ratio: ${data.mixingRatio}`;
-                document.getElementById('sensorSaturationRate').innerText = `Sensor Saturation Rate: ${data.sensorSaturationRate}`;
-                document.getElementById('sensorTemperature').innerText = `Sensor Temperature: ${data.sensorTemperature}`;
+                // Clear existing rows except header
+                tbody.innerHTML = '';
 
-                // Add a new row to the historical data table
-                const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${timestamp}</td>
-                    <td>${data.dewpointTemperature}</td>
-                    <td>${data.mixingRatio}</td>
-                    <td>${data.sensorSaturationRate}</td>
-                    <td>${data.sensorTemperature}</td>
-                `;
-                document.getElementById('historicalDataTable').querySelector('tbody').appendChild(row);
-
-                // Send data to Google Sheet
-                await sendDataToGoogleSheet({
-                    timestamp,
-                    dewpointTemperature: data.dewpointTemperature,
-                    mixingRatio: data.mixingRatio,
-                    sensorSaturationRate: data.sensorSaturationRate,
-                    sensorTemperature: data.sensorTemperature
+                // Skip header row, add data rows
+                rows.slice(1).forEach(row => {
+                    if (row.trim()) {
+                        const tr = document.createElement('tr');
+                        row.split(',').forEach(cell => {
+                            const td = document.createElement('td');
+                            td.textContent = cell.trim();
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    }
                 });
-            } catch (error) {
-                console.error('Error fetching sensor data:', error);
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    // Cookie/LocalStorage Management
+    function saveCookie() {
+        const cookieName = prompt('Enter a name for this cookie:');
+        if (cookieName) {
+            const tableData = Array.from(document.getElementById('historicalDataTable').querySelectorAll('tbody tr'))
+                .map(row => Array.from(row.querySelectorAll('td')).map(td => td.textContent));
+            
+            localStorage.setItem(`sensor-cookie-${cookieName}`, JSON.stringify({
+                data: tableData,
+                timestamp: new Date().getTime()
+            }));
+            alert(`Cookie "${cookieName}" saved successfully!`);
+        }
+    }
+
+    function loadCookie() {
+        const cookieName = prompt('Enter the name of the cookie to load:');
+        if (cookieName) {
+            const storedData = localStorage.getItem(`sensor-cookie-${cookieName}`);
+            if (storedData) {
+                const { data } = JSON.parse(storedData);
+                const tbody = document.getElementById('historicalDataTable').querySelector('tbody');
+                
+                // Clear existing rows
+                tbody.innerHTML = '';
+
+                // Populate with stored data
+                data.forEach(rowData => {
+                    const tr = document.createElement('tr');
+                    rowData.forEach(cellData => {
+                        const td = document.createElement('td');
+                        td.textContent = cellData;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                alert(`Cookie "${cookieName}" loaded successfully!`);
+            } else {
+                alert(`No cookie found with name "${cookieName}"`);
             }
         }
+    }
 
-        async function sendDataToGoogleSheet(data) {
-            try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbz3j9wT8dPpp2_JsYAUYZCn4Dj1aJdCyiCoyx7r7_A3k7_cwZvCqGxOURmiYALNZME6yQ/exec', {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    console.log('Data sent to Google Sheet successfully');
-                }
-            } catch (error) {
-                console.error('Error sending data to Google Sheet:', error);
+    function deleteCookie() {
+        const cookieName = prompt('Enter the name of the cookie to delete:');
+        if (cookieName) {
+            const key = `sensor-cookie-${cookieName}`;
+            if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                alert(`Cookie "${cookieName}" deleted successfully!`);
+            } else {
+                alert(`No cookie found with name "${cookieName}"`);
             }
-
-            /* // GOOGLE SCRIPTS API
-            function doPost(e) {
-                const sheet = SpreadsheetApp.openById('1YyxaHuIK8_u73J7-xynAuSJXQiRUjXGQH8LGYUlPG8k').getSheetByName('Sheet1');
-                const data = JSON.parse(e.postData.contents);
-                sheet.appendRow([data.timestamp, data.dewpointTemperature, data.mixingRatio, data.sensorSaturationRate, data.sensorTemperature]);
-                return ContentService.createTextOutput(JSON.stringify({status: 'success'})).setMimeType(ContentService.MimeType.JSON);
-            }
-            */
         }
+    }
 
-        // Initial fetch and set interval for periodic updates
-        setInterval(fetchSensorData, 5000); // Fetch data every 5 seconds
-        fetchSensorData(); // Initial fetch
-        checkVersion(); // Check version on load
-    </script>
+    // Clear History functionality
+    function clearHistory() {
+        const confirmClear = confirm('Are you sure you want to clear all historical data? This cannot be undone.');
+        if (confirmClear) {
+            const tbody = document.getElementById('historicalDataTable').querySelector('tbody');
+            tbody.innerHTML = ''; // Clear table
+            
+            // Clear all sensor-related cookies
+            Object.keys(localStorage)
+                .filter(key => key.startsWith('sensor-cookie-'))
+                .forEach(key => localStorage.removeItem(key));
+            
+            alert('Historical data has been cleared.');
+        }
+    }
+
+    // Attach event listeners to buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('button');
+        buttons[1].addEventListener('click', exportData);
+        buttons[2].addEventListener('click', importData);
+        buttons[3].addEventListener('click', saveCookie);
+        buttons[4].addEventListener('click', loadCookie);
+        buttons[5].addEventListener('click', deleteCookie);
+        buttons[6].addEventListener('click', clearHistory);
+        buttons[7].addEventListener('click', getIpAddress);
+        document.getElementById('fetchIpAddress').addEventListener('click', getIpAddress);
+
+        // Set the sheet name input to the last used value from localStorage
+        const lastSheetName = localStorage.getItem('last-sheet-name') || 'Sheet1';
+        document.getElementById('sheetNameInput').value = lastSheetName;
+    });
+
+    document.getElementById('submitSheetName').addEventListener('click', () => {
+      const sheetName = document.getElementById('sheetNameInput').value || 'Sheet1';
+      localStorage.setItem('last-sheet-name', sheetName); // Save the sheet name to localStorage
+      document.querySelector('textarea').value = sheetName;
+    });
+  </script>
 </body>
 </html>
