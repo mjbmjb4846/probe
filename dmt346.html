@@ -1,10 +1,11 @@
 <!-----------------------------------------------------------------------------------------------------------------
-<  DOWNLOAD INSTRUCTIONS:                                                                                         >
+< DOWNLOAD INSTRUCTIONS:                                                                                          >
 < 1. Click [ctrl + s] or right-click on the page and select "Save As" to download the file.                       >
-< 2. Save the file with the name "dmt346.html" on your computer.                                                   >
+< 2. Save the file with the name "dmt346.html" on your computer. Replace your existing file if possible.          >
 < 3. Open the file in a web browser to view the interface.                                                        >
 < 4. The interface will check for updates automatically and display a notification if a new version is available. >
 ------------------------------------------------------------------------------------------------------------------>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -214,7 +215,7 @@
     // VERSION CHECK ==============================================================================
     // ============================================================================================
 
-    const currentVersion = 2.0; // Current version of the file
+    const currentVersion = 2.05; // Current version of the file
 
     async function checkVersion() {
       try {
@@ -456,7 +457,7 @@
     
     // Export Data functionality
     function exportData() {
-        const sheetName = document.querySelector('textarea').value || 'Sheet1';
+        const sheetName = document.getElementById('sheetNameInput').value || 'Sheet1';
         const table = document.getElementById('historicalDataTable');
         const rows = table.querySelectorAll('tr');
         
