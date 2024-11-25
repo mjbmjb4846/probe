@@ -218,7 +218,7 @@
 
     async function checkVersion() {
       try {
-        const response = await fetch('https://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/index.html');
+        const response = await fetch('https://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/dmt346.html');
         const text = await response.text();
         const versionMatch = text.match(/const currentVersion = (\d+\.\d+);/);
         if (versionMatch) {
