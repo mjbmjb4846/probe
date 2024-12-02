@@ -215,7 +215,8 @@
     // VERSION CHECK ==============================================================================
     // ============================================================================================
 
-    const currentVersion = 2.05; // Current version of the file
+    const currentVersion = 2.06; // Current version of the file
+    const defaultIP = '35.20.108.46'
 
     async function checkVersion() {
       try {
@@ -326,7 +327,7 @@
     
     async function fetchSensorData() {
       try {
-        const ipAddress = localStorage.getItem('sensor-ip') || '35.20.54.7';
+        const ipAddress = localStorage.getItem('sensor-ip') || defaultIP;
         const response = await fetch(`http://${ipAddress}/`);
         const data = await response.json();
 
@@ -390,7 +391,7 @@
       }
       /*
       try {
-        let ipAddress = localStorage.getItem('sensor-ip') || '35.20.54.7';
+        let ipAddress = localStorage.getItem('sensor-ip') || defaultIP;
         let newIpAddress = null;
         // Simulate user gesture by requesting port on button click
         const port = await navigator.serial.requestPort();
@@ -442,7 +443,7 @@
         }
       } catch (error) {
         console.error('Error reading IP address from USB:', error);
-        return localStorage.getItem('sensor-ip') || '35.20.54.7';
+        return localStorage.getItem('sensor-ip') || defaultIP;
       }
       */
     }
