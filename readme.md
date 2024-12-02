@@ -2,7 +2,9 @@
 
 This project provides the web interface for displaying Vaisala DMT364 sensor readings, including dewpoint temperature, mixing ratio, sensor saturation rate, and sensor temperature. The interface also includes features for exporting and importing data, saving and loading data as cookies, and fetching the internal microcontroller's IP address.
 
-©️ MSU BAE - 02 DEC 2024
+© MSU BAE - 02 DEC 2024
+
+Important Note: Readings will not come through unless the microcontroller is connected to a power source via its USB cable. This power can be obtained from a computer or a USB power adapter.
 
 ## Download Instructions
 
