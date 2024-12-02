@@ -151,6 +151,45 @@
       cursor: pointer;
       font-weight: bold;
     }
+    .ip-update-tab {
+      background-color: #ffeb3b;
+      border-bottom: 4px solid #c0b12f;
+      color: #333;
+      padding: 10px;
+      width: 100%;
+      text-align: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      display: none;
+    }
+    .ip-update-tab a {
+      color: #333;
+      text-decoration: none;
+      background-color: #c0b12f;
+      padding: 5px 10px;
+      border-radius: 5px;
+      margin-left: 10px;
+    }
+    .ip-update-tab .close {
+      position: absolute;
+      right: 25px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #c0b12f;
+      padding: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .ip-update-tab .update {
+      background-color: #c0b12f;
+      padding: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -160,21 +199,26 @@
     <a href="https://raw.githubusercontent.com/mjbmjb4846/probe/refs/heads/main/dmt346.html" target="_blank" rel="noopener">Update Page</a>
     <span class="close" onclick="document.getElementById('updateTab').style.display='none'">x</span>
   </div>
+  <div class="ip-update-tab" id="ipUpdateTab">
+    No data received. The device's IP address may have changed. Please try updating it via USB:
+    <span class="update" onclick="getIpAddress(); document.getElementById('ipUpdateTab').style.display='none'">Update IP Address</span>
+    <span class="close" onclick="document.getElementById('ipUpdateTab').style.display='none'">x</span>
+  </div>
   <!-- Grid Layout for Current Readings and Chart -->
   <div class="grid-container">
     <div class="container">
       <div class="input-container">
         <input type="text" id="sheetNameInput" placeholder="Dataset Name">
-        <button type="button" id="submitSheetName">Update</button>
+        <button type="button" id="submitSheetName" title="Update the dataset name">Update</button>
       </div>
-      <button type="button">Export Data</button>
-      <button type="button">Import Data</button>
+      <button type="button" title="Export the data to a CSV file">Export Data</button>
+      <button type="button" title="Import data from a CSV file">Import Data</button>
       <!--A cookie called "backup" should be automatically created and if the last timestamp is within 60 minutes when the page first loads, it should populate with that data. Otherwise, the backup file should be cleared when the first bit of new data comes in.-->
-      <button type="button">Save Cookie 🍪</button>
-      <button type="button">Load Cookie 🍪</button>
-      <button type="button">Delete Cookie 🍪</button>
-      <button type="button" style="background-color: rgb(255, 240, 240); color: rgb(173, 61, 61);">Clear History ⚠️</button>
-      <button type="button" id="fetchIpAddress"><s>Fetch IP Address</s></button>
+      <button type="button" title="Save the current data as a cookie">Save Cookie 🍪</button>
+      <button type="button" title="Load data from a saved cookie">Load Cookie 🍪</button>
+      <button type="button" title="Delete a saved cookie">Delete Cookie 🍪</button>
+      <button type="button" style="background-color: rgb(255, 240, 240); color: rgb(173, 61, 61);" title="Clear all historical data">Clear History ⚠️</button>
+      <button title="Connect USB to device and fetch IP address" type="button" id="fetchIpAddress">Fetch IP Address</button>
     </div>
     <div class="container">
       <h1>Current Sensor Reading</h1>
@@ -215,7 +259,7 @@
     // VERSION CHECK ==============================================================================
     // ============================================================================================
 
-    const currentVersion = 2.06; // Current version of the file
+    const currentVersion = 3.00; // Current version of the file
     const defaultIP = '35.20.108.46'
 
     async function checkVersion() {
@@ -377,76 +421,64 @@
     }
 
     async function getIpAddress() {
-      const ipAddress = prompt('Enter the IP address of the sensor:');
-      if (!ipAddress) {
-        localStorage.removeItem('sensor-ip');
-        return alert('Sensor IP Address cleared.');
-      }
-      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-      if (!ipRegex.test(ipAddress)) {
-        return alert('Invalid IP address format. Please enter a valid IP address.');
-      } else {
-        localStorage.setItem('sensor-ip', ipAddress);
-        alert(`Sensor IP Address set to: ${ipAddress}`);
-      }
-      /*
+      let port;
       try {
-        let ipAddress = localStorage.getItem('sensor-ip') || defaultIP;
-        let newIpAddress = null;
-        // Simulate user gesture by requesting port on button click
-        const port = await navigator.serial.requestPort();
+        port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
+
         const reader = port.readable.getReader();
-        const textDecoder = new TextDecoderStream();
-
-        // Ensure the stream is not already locked
-        if (!port.readable.locked) {
-          const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-          const readerStream = textDecoder.readable.getReader();
-
-          const timeout = new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds timeout
-          const readLoop = async () => {
-            while (true) {
-              const { value, done } = await readerStream.read();
-              if (done) {
-                readerStream.releaseLock();
-                break;
-              }
-              // Assuming the ESP32 sends the IP address directly
-              if (value.trim()) {
-                newIpAddress = value.trim();
-                localStorage.setItem('sensor-ip', newIpAddress);
-                break;
-              }
-            }
-          };
-
-          await Promise.race([readLoop(), timeout]);
-
-          await readerStream.cancel();
-          await readableStreamClosed.catch(() => {});
-
+        let data = '';
+        const startTime = Date.now();
+        while (Date.now() - startTime < 100) {
+          const { value, done } = await reader.read();
+          if (done) {
+            reader.releaseLock();
+            break;
+          }
+          data += new TextDecoder().decode(value);
         }
 
-        if (reader.locked) {
-          reader.releaseLock();
+        const ipMatch = data.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
+        reader.releaseLock();
+        if (port) {
+          await port.close();
         }
 
-        await port.close();
-
-        if (newIpAddress) {
-          alert(`New IP Address fetched: ${newIpAddress}`);
-          return newIpAddress;
+        if (ipMatch) {
+          alert(`IP Address found: ${ipMatch[0]}`);
+          localStorage.setItem('sensor-ip', ipMatch[0]);
+          return;
         } else {
-          alert(`Using old IP Address: ${ipAddress}`);
-          return ipAddress;
+          throw new Error('IP address not found');
         }
       } catch (error) {
+        if (port) {
+          await port.close();
+        }
         console.error('Error reading IP address from USB:', error);
-        return localStorage.getItem('sensor-ip') || defaultIP;
+        alert('Failed to fetch IP address via USB. Please enter it manually.');
+        // Fallback to the existing method
+        const ipAddress = prompt('Enter the IP address of the sensor:');
+        if (!ipAddress) {
+          localStorage.removeItem('sensor-ip');
+          return alert('Sensor IP Address cleared.');
+        }
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipRegex.test(ipAddress)) {
+          return alert('Invalid IP address format. Please enter a valid IP address.');
+        } else {
+          localStorage.setItem('sensor-ip', ipAddress);
+          alert(`Sensor IP Address set to: ${ipAddress}`);
+        }
       }
-      */
     }
+
+    // Show IP update tab if no data received within 20 seconds
+    setTimeout(() => {
+      if (document.getElementById('dewpointTemperature').innerText.includes('Loading...')) {
+        document.getElementById('ipUpdateTab').style.display = 'block';
+      }
+    }, 15000);
 
     // Fetch data every 5 seconds
     setInterval(fetchSensorData, 5000);
