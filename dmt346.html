@@ -254,6 +254,127 @@
     </div>
   </div>
   <script>
+
+    // ============================================================================================
+    // WAKE LOCK ==================================================================================
+    // ============================================================================================
+
+    // Add these variables at the top of your script
+    let wakeLock = null;
+    let wakeLockEnabled = false;
+
+    // Function to request wake lock
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLockEnabled = true;
+        console.log('Wake Lock is active');
+        
+        // Add event listener for visibility change
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        return true;
+      } catch (err) {
+        console.error(`Failed to request wake lock: ${err.name}, ${err.message}`);
+        wakeLockEnabled = false;
+        return false;
+      }
+    }
+
+    // Function to release wake lock
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release()
+          .then(() => {
+            wakeLock = null;
+            wakeLockEnabled = false;
+            console.log('Wake Lock released');
+          });
+      }
+    }
+
+    // Handle visibility change
+    async function handleVisibilityChange() {
+      if (wakeLockEnabled) {
+        if (document.visibilityState === 'visible') {
+          await requestWakeLock();
+        } else {
+          releaseWakeLock();
+        }
+      }
+    }
+
+    // Add a button to the interface
+    const wakeLockButton = document.createElement('button');
+    wakeLockButton.innerHTML = 'Activate Screen Lock';
+    wakeLockButton.title = 'Prevent screen/computer from sleeping';
+    wakeLockButton.onclick = async () => {
+      if (!wakeLockEnabled) {
+        const success = await requestWakeLock();
+        if (success) {
+          wakeLockButton.style.backgroundColor = '#90EE90';
+          wakeLockButton.innerHTML = 'Screen Lock Active';
+        } else {
+          wakeLockButton.style.backgroundColor = '#FFC0CB';
+          wakeLockButton.innerHTML = 'Failed to Lock Screen';
+        }
+      } else {
+        releaseWakeLock();
+        wakeLockButton.style.backgroundColor = '';
+        wakeLockButton.innerHTML = 'Activate Screen Lock';
+      }
+    };
+
+    // Insert the button into the first container div after the existing buttons
+    document.querySelector('.container').appendChild(wakeLockButton);
+
+    // Backup method using setInterval as fallback
+    let keepAliveInterval;
+    function startKeepAlive() {
+      // Create a tiny audio context to keep system active
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      keepAliveInterval = setInterval(() => {
+        const oscillator = audioContext.createOscillator();
+        oscillator.connect(audioContext.destination);
+        oscillator.frequency.setValueAtTime(0, audioContext.currentTime); // Silent
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.001); // Extremely short duration
+      }, 30000); // Every 30 seconds
+    }
+
+    function stopKeepAlive() {
+      if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+      }
+    }
+
+    // Add these event listeners
+    window.addEventListener('load', async () => {
+      // Check if Wake Lock API is supported
+      if ('wakeLock' in navigator) {
+        console.log('Wake Lock API supported');
+      } else {
+        console.log('Wake Lock API not supported, using fallback');
+        wakeLockButton.onclick = () => {
+          if (!keepAliveInterval) {
+            startKeepAlive();
+            wakeLockButton.style.backgroundColor = '#90EE90';
+            wakeLockButton.innerHTML = 'Keep Alive Active';
+          } else {
+            stopKeepAlive();
+            wakeLockButton.style.backgroundColor = '';
+            wakeLockButton.innerHTML = 'Keep Screen On';
+          }
+        };
+      }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('unload', () => {
+      releaseWakeLock();
+      stopKeepAlive();
+    });
     
     // ============================================================================================
     // VERSION CHECK ==============================================================================
