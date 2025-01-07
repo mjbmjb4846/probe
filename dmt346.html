@@ -256,6 +256,91 @@
   <script>
 
     // ============================================================================================
+    // Backgeround Task ===========================================================================
+    // ============================================================================================
+
+    // Add this near the top of your existing script section
+    const workerBlob = new Blob([`
+      // Worker code
+      setInterval(() => {
+        self.postMessage('keepalive');
+      }, 1000);
+    `], { type: 'application/javascript' });
+
+    const workerUrl = URL.createObjectURL(workerBlob);
+    let worker = null;
+    let audioContext = null;
+    let audioSource = null;
+
+    function startBackgroundOperation() {
+      // Create and start Web Worker
+      if (!worker) {
+        worker = new Worker(workerUrl);
+        worker.onmessage = () => {
+          // Keep main thread active
+          if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (!audioSource) {
+            // Create a silent oscillator
+            audioSource = audioContext.createOscillator();
+            audioSource.frequency.setValueAtTime(1, audioContext.currentTime); // Nearly silent
+            audioSource.connect(audioContext.destination);
+            audioSource.start();
+          }
+        };
+      }
+
+      // Request wake lock if available
+      if ('wakeLock' in navigator) {
+        requestWakeLock();
+      }
+    }
+
+    function stopBackgroundOperation() {
+      if (worker) {
+        worker.terminate();
+        worker = null;
+      }
+      if (audioSource) {
+        audioSource.stop();
+        audioSource = null;
+      }
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+      }
+    }
+
+    // Add UI control
+    const backgroundButton = document.createElement('button');
+    backgroundButton.innerHTML = 'Enable Background Operation';
+    backgroundButton.title = 'Keep running at full speed even when minimized';
+    backgroundButton.style.backgroundColor = '#ffeb3b';
+
+    let isBackgroundEnabled = false;
+
+    backgroundButton.onclick = () => {
+      if (!isBackgroundEnabled) {
+        startBackgroundOperation();
+        isBackgroundEnabled = true;
+        backgroundButton.style.backgroundColor = '#90EE90';
+        backgroundButton.innerHTML = 'Background Operation Active';
+      } else {
+        stopBackgroundOperation();
+        isBackgroundEnabled = false;
+        backgroundButton.style.backgroundColor = '#ffeb3b';
+        backgroundButton.innerHTML = 'Enable Background Operation';
+      }
+    };
+
+    // Insert the button after the existing buttons
+    document.querySelector('.container').appendChild(backgroundButton);
+
+    // Handle page cleanup
+    window.addEventListener('beforeunload', stopBackgroundOperation);
+
+    // ============================================================================================
     // WAKE LOCK ==================================================================================
     // ============================================================================================
 
