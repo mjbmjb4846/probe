@@ -14,10 +14,10 @@ Important Note: Readings will not come through unless the microcontroller is con
 
 2. **Download the Launch Program:**
    - For Windows 7 or Greater: Save the `launch_win7` Chrome or Edge program to the same folder as the `dmt346.html` file.
-   - For any Linux distribution supporting HTML5: Save the `launch_linux` Chrome or Edge program to the same folder as the `dmt346.html` file.
+   - For any Linux distribution supporting HTML5: Save the `launch_linux` Chrome or Edge program to the same folder as the `dmt346.html` file. Don't forget to make the script executable by running `chmod +x launch_linux{browser}.sh` in your terminal.
 
 3. **Open the File:**
-   - Run the `launch_win7` program to launch the interface in your chosen web browser.
+   - Run the `launch_win7` program to launch the interface in your chosen Chromium web browser.
    - Or, open the `dmt346.html` file in a other modern web browser of your choice.
 
 ## Usage Instructions
@@ -65,7 +65,7 @@ The interface will automatically check for updates and display a notification if
 ## Additional Information
 
 - The interface fetches sensor data every 5 seconds and updates the current readings, chart, and historical data table.
-- The interface will slow down data collection because of browser throttling if the page is not in focus and the program was not started with the launch program.
+- The interface will slow down data collection because of browser throttling if the page is not in focus and the program was not started with the launch file.
 - The IP address of the sensor can be updated via USB or manually if needed.
 - The dataset name is saved to localStorage and will persist across sessions.
 

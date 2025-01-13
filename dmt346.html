@@ -240,7 +240,7 @@
       <table id="historicalDataTable">
       <thead>
         <tr>
-        <th>UTC Time</th>
+        <th>Timestamp</th>
         <th>Dewpoint Temp (°F)</th>
         <th>Mixing Ratio (g/kg)</th>
         <th>Saturation Rate (%)</th>
@@ -380,8 +380,8 @@
     // VERSION CHECK ==============================================================================
     // ============================================================================================
 
-    const currentVersion = 3.00; // Current version of the file
-    const defaultIP = '35.20.108.46'
+    const currentVersion = 3.24; // Current version of the file
+    const defaultIP = '35.20.20.25'
 
     async function checkVersion() {
       try {
@@ -458,7 +458,7 @@
     });
 
     // ============================================================================================
-    // DATA COLLECTION & LOGGING ==================================================================
+    // SETUP, DATA COLLECTION & LOGGING ===========================================================
     // ============================================================================================
 
     async function sendDataToGoogleSheet(data) {
@@ -579,12 +579,20 @@
         console.error('Error reading IP address from USB:', error);
         alert('Failed to fetch IP address via USB. Please enter it manually.');
         // Fallback to the existing method
-        const ipAddress = prompt('Enter the IP address of the sensor:');
+        let ipAddress = prompt('Enter the IP address of the sensor:');
         if (!ipAddress) {
           localStorage.removeItem('sensor-ip');
           return alert('Sensor IP Address cleared.');
         }
+        // Test Alphabetical
         const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (/[a-zA-Z]/.test(ipAddress)) {
+          ipAddress = lettersToIP(ipAddress);
+        }
+        // Test MSU Short
+        if (/^(\d{1,3}\.)\d{1,3}$/.test(ipAddress)) {
+          ipAddress = "35.20." + ipAddress;
+        }
         if (!ipRegex.test(ipAddress)) {
           return alert('Invalid IP address format. Please enter a valid IP address.');
         } else {
@@ -683,6 +691,7 @@
         }
     }
 
+    // Load Cookie functionality
     function loadCookie() {
         const cookieName = prompt('Enter the name of the cookie to load:');
         if (cookieName) {
@@ -711,6 +720,7 @@
         }
     }
 
+    // Delete Cookie functionality
     function deleteCookie() {
         const cookieName = prompt('Enter the name of the cookie to delete:');
         if (cookieName) {
@@ -757,11 +767,31 @@
         document.getElementById('sheetNameInput').value = lastSheetName;
     });
 
+    // Update the Google Sheet name
     document.getElementById('submitSheetName').addEventListener('click', () => {
       const sheetName = document.getElementById('sheetNameInput').value || 'Sheet1';
       localStorage.setItem('last-sheet-name', sheetName); // Save the sheet name to localStorage
       document.querySelector('textarea').value = sheetName;
     });
+  
+    // ============================================================================================
+    // HELPER FUNCTIONS ===========================================================================
+    // ============================================================================================
+
+    function getAlphabetPosition(letter) {
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+      const lowerCaseLetter = letter.toLowerCase();
+      const position = alphabet.indexOf(lowerCaseLetter) + 1;
+      return position > 0 ? position : letter;
+    }
+
+    function lettersToIP(str) {
+        const parts = str.match(/[a-zA-Z]|\d{3}/g);
+        return parts.map(part => getAlphabetPosition(part)).join('.');
+    }
+
+    console.log(lettersToIP('mike'));
+  
   </script>
 </body>
 </html>
