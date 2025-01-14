@@ -2,9 +2,9 @@
 
 This project provides the web interface for displaying Vaisala DMT364 sensor readings, including dewpoint temperature, mixing ratio, sensor saturation rate, and sensor temperature. The interface also includes features for exporting and importing data, saving and loading data as cookies, and fetching the internal microcontroller's IP address.
 
-© MSU BAE - 02 DEC 2024
+*© MSU BAE - 14 JAN 2024*
 
-Important Note: Readings will not come through unless the microcontroller is connected to a power source via its USB cable. This power can be obtained from a computer or a USB power adapter.
+>Important Note: Readings will not come through unless the microcontroller is connected to a power source via its USB cable. This power can be obtained from a computer or a USB power adapter.
 
 ## Download Instructions
 
@@ -46,6 +46,9 @@ Important Note: Readings will not come through unless the microcontroller is con
 8. **Fetch IP Address:**
    - Click the "Fetch IP Address" button to connect USB to the device and fetch the IP address.
 
+9. **Activate Screen Lock:**
+   - Click the "Activate Screen Lock" button to prevent the screen/computer from sleeping while the window is open.
+
 ## Update Notifications
 
 The interface will automatically check for updates and display a notification if a new version is available. Follow these steps to update:
@@ -69,4 +72,5 @@ The interface will automatically check for updates and display a notification if
 - The IP address of the sensor can be updated via USB or manually if needed.
 - The dataset name is saved to localStorage and will persist across sessions.
 
-For any issues or questions, please refer to the source code or contact the project maintainer.
+> For any issues or questions, please refer to the source code or contact the project maintainer.
+> For more information on the sensor readings, please refer to the Vaisala DMT364 user manual.
