@@ -18,7 +18,7 @@ This project provides the web interface for displaying Vaisala DMT364 sensor rea
 
 3. **Open the File:**
    - Run the `launch_win7` program to launch the interface in your chosen Chromium web browser.
-   - Or, open the `dmt346.html` file in a other modern web browser of your choice.
+   - Or, open the `dmt346.html` file in an other modern web browser of your choice.
 
 ## Usage Instructions
 
@@ -72,5 +72,4 @@ The interface will automatically check for updates and display a notification if
 - The IP address of the sensor can be updated via USB or manually if needed.
 - The dataset name is saved to localStorage and will persist across sessions.
 
-> For any issues or questions, please refer to the source code or contact the project maintainer.
-> For more information on the sensor readings, please refer to the Vaisala DMT364 user manual.
+>For any issues or questions, please refer to the source code or contact the project maintainer. For more information on the sensor readings, please refer to the Vaisala DMT364 user manual.
