@@ -7,4 +7,4 @@ pkill -f chrome
 sleep 2
 
 # Launch Chrome with disabled timer throttling and the HTML file
-google-chrome --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding file://$(pwd)/dmt346.html
+google-chrome --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding file://$(pwd)/dmt346.html https://192.168.5.20:8443
